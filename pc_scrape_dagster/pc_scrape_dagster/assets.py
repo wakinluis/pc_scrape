@@ -15,6 +15,12 @@ def scrape_windnetpc() -> Output[pd.DataFrame]:
         cwd=SCRAPY_PROJECT_DIR
     )
     df = pd.read_csv(WINDNET_CSV)
+
+    # Drop rows where product or price is missing/null/empty
+    df = df.dropna(subset=["product", "price"])
+    df = df[df["price"].str.strip() != ""]
+    df = df[df["product"].str.strip() != ""]
+
     return Output(
         df,
         metadata={
@@ -22,7 +28,6 @@ def scrape_windnetpc() -> Output[pd.DataFrame]:
             "preview": MetadataValue.md(df.head().to_markdown())
         }
     )
-
 @asset
 def scrape_easypc() -> Output[pd.DataFrame]:
     subprocess.run(
@@ -31,6 +36,10 @@ def scrape_easypc() -> Output[pd.DataFrame]:
         cwd=SCRAPY_PROJECT_DIR
     )
     df = pd.read_csv(EASYPC_CSV)
+
+    # Clean price column to remove non-numeric symbols (like â‚±)
+    df["price"] = df["price"].str.replace(r"[^\d.,]", "", regex=True)
+
     return Output(
         df,
         metadata={

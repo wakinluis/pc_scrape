@@ -16,10 +16,14 @@ class WindnetpcSpider(scrapy.Spider):
     def parse(self, response):
         for product in response.css("li.product"):
             price = product.css("span.woocommerce-Price-amount.amount bdi::text").get()
+
+            if not price:
+                continue
+
             yield {
                 "category": response.css("h1.page-title::text").get(),
                 "product": product.css("h2.woocommerce-loop-product__title::text").get(),
-                "price": price if price else "N/A",
+                "price": price,
             }
 
         next_page = response.css("a.next.page-numbers::attr(href)").get()
